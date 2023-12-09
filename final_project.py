@@ -13,8 +13,13 @@ from tensorflow.keras.utils import to_categorical, plot_model
 from tensorflow.keras.layers import Input , Dense , LSTM , Embedding , Dropout , add
 
 #%%
-BASE_DIR = '/kaggle/input/flickr8k'
-WORKING_DIR = '/kaggle/working'
+# dataset_text = "/home/ubuntu/NLP/home/ubuntu/DeepLearning/Flicker8k_text"
+# dataset_images = "/home/ubuntu/NLP/home/ubuntu/DeepLearning/Flicker8k_Dataset"
+BASE_DIR = "/home/ubuntu/NLP/home/ubuntu/DeepLearning/"
+CODE_DIR = "/home/ubuntu/NLP/home/ubuntu/DeepLearning/Code"
+
+# BASE_DIR = '/kaggle/input/flickr8k'
+# WORKING_DIR = '/kaggle/working'
 
 #%%
 # Load vgg16 Model
@@ -22,12 +27,12 @@ model = VGG16()
 # restructure model
 model = Model(inputs = model.inputs , outputs = model.layers[-2].output)
 # Summerize
-print(model.summary())
+# print(model.summary())
 
 #%%
 # extract features from image
 features = {}
-directory = os.path.join(BASE_DIR, 'Images')
+directory = os.path.join(BASE_DIR, 'Flicker8k_Dataset')
 
 for img_name in tqdm(os.listdir(directory)):
     # load the image from file
@@ -55,7 +60,7 @@ for img_name in tqdm(os.listdir(directory)):
 
 #%%
 # store features in pickle
-pickle.dump(features, open(os.path.join(WORKING_DIR, 'features.pkl'), 'wb'))
+pickle.dump(features, open(os.path.join(CODE_DIR, 'features.pkl'), 'wb'))
 
 #Extracted features are not stored in the disk, so re-extraction of features can extend running time
 #Dumps and store your dictionary in a pickle for reloading it to save time
@@ -63,18 +68,18 @@ pickle.dump(features, open(os.path.join(WORKING_DIR, 'features.pkl'), 'wb'))
 
 #%%
 # load features from pickle
-with open(os.path.join(WORKING_DIR, 'features.pkl'), 'rb') as f:
+with open(os.path.join(CODE_DIR, 'features.pkl'), 'rb') as f:
     features = pickle.load(f)
 # Load all your stored feature data to your project for quicker runtime
 
 #%%
 # Load the Captions Data
-with open(os.path.join(BASE_DIR, 'captions.txt'), 'r') as f:
+with open(os.path.join(CODE_DIR, 'captions.txt'), 'r') as f:
     next(f)
     captions_doc = f.read()
 
 #%%
-# split and append the captions data with the image¶
+# split and append the captions data with the image
 # create mapping of image to captions
 mapping = {}
 # process lines
@@ -105,6 +110,8 @@ len(mapping)
 
 #%%
 # Preprocess Text Data
+from tqdm import tqdm
+
 def clean(mapping):
     for key, captions in mapping.items():
         for i in range(len(captions)):
@@ -162,7 +169,7 @@ vocab_size
 #%%
 # get maximum length of the caption available
 max_length = max(len(caption.split()) for caption in all_captions)
-max_length
+print(max_length)
 #35
 
 #%%
@@ -226,8 +233,9 @@ outputs = Dense(vocab_size, activation='softmax')(decoder2)
 model = Model(inputs=[inputs1, inputs2], outputs=outputs)
 model.compile(loss='categorical_crossentropy', optimizer='adam')
 
+print("done for model")
 # plot the model
-plot_model(model, show_shapes=True)
+# plot_model(model, show_shapes=True)
 
 #%%
 # train the model
@@ -243,7 +251,7 @@ for i in range(epochs):
 
 #%%
 # save the model
-model.save(WORKING_DIR+'/best_model.h5')
+model.save(CODE_DIR+'/best_model.h5')
 # save the model in the working directory for reuse
 
 #%%
