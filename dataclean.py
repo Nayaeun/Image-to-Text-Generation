@@ -66,8 +66,8 @@ class DataPreprocessor:
 
 
 # Example usage:
-dataset_text = "/home/ubuntu/DL/Dataset/Flicker8k_text"
-dataset_images = "/home/ubuntu/DL/Dataset/Flicker8k_Dataset"
-save_directory = "/home/ubuntu/DL/Code"
+dataset_text = "/home/ubuntu/DL/dataset/Flicker8k_text"
+dataset_images = "/home/ubuntu/DL/dataset/Flicker8k_Dataset"
+save_directory = "/home/ubuntu/DL/code"
 preprocessor = DataPreprocessor(dataset_text, dataset_images, save_directory)
 preprocessor.preprocess_data()
