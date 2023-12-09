@@ -65,9 +65,20 @@ class DataPreprocessor:
         self.save_descriptions(self.clean_descriptions, save_filename)
 
 
+# # Example usage:
+# dataset_text = "/home/ubuntu/DL/dataset/Flicker8k_text"
+# dataset_images = "/home/ubuntu/DL/dataset/Flicker8k_Dataset"
+# save_directory = "/home/ubuntu/DL/code"
+# preprocessor = DataPreprocessor(dataset_text, dataset_images, save_directory)
+# preprocessor.preprocess_data()
+
 # Example usage:
-dataset_text = "/home/ubuntu/DL/dataset/Flicker8k_text"
-dataset_images = "/home/ubuntu/DL/dataset/Flicker8k_Dataset"
-save_directory = "/home/ubuntu/DL/code"
+import os
+new_directory = '/home/ubuntu/NLP/home/ubuntu/DeepLearning'
+os.chdir(new_directory)
+
+dataset_text = ""
+dataset_images = ""
+save_directory = "Code"
 preprocessor = DataPreprocessor(dataset_text, dataset_images, save_directory)
 preprocessor.preprocess_data()
