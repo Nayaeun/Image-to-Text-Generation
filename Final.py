@@ -308,7 +308,7 @@ train_features = load_features(train_imgs)
 
 
 #%% # Tokenizing the Vocabulary
-# # Convert dictionary to clear list of descriptions
+# # Convert dictionary to clear list of descriptions - original
 # def dict_to_list(descriptions):
 #     all_desc = []
 #     for key in descriptions.keys():
@@ -339,20 +339,54 @@ train_features = load_features(train_imgs)
 #
 # max_length_value = max_length(train_descriptions)
 # print("Max length of description:", max_length_value)
-#
 
+# #=======================Haelee======================================
+# from transformers import BertTokenizer
+#
+# class BertTextTokenizer:
+#     def __init__(self, model_name='bert-base-uncased', max_length=64):
+#         self.tokenizer = BertTokenizer.from_pretrained(model_name)
+#         self.max_length = max_length
+#
+#     def dict_to_list(self, descriptions):
+#         all_desc = []
+#         for key in descriptions.keys():
+#             [all_desc.append(d) for d in descriptions[key]]
+#         return all_desc
+#
+#     def tokenize_descriptions(self, descriptions):
+#         tokenized_descriptions = []
+#         for desc in descriptions:
+#             tokens = self.tokenizer.encode(desc, add_special_tokens=True, max_length=self.max_length, truncation=True)
+#             tokenized_descriptions.append(tokens)
+#         return tokenized_descriptions
+#
+#     def tokenize_and_get_max_length(self, descriptions):
+#         desc_list = self.dict_to_list(descriptions)
+#         tokenized_desc_list = self.tokenize_descriptions(desc_list)
+#         max_length_value = max(len(tokens) for tokens in tokenized_desc_list)
+#         return max_length_value
+#
+# # Example Usage
+# # Assuming train_descriptions is already defined
+# bert_tokenizer = BertTextTokenizer()
+# max_length_value = bert_tokenizer.tokenize_and_get_max_length(train_descriptions)
+# print("Max length of description:", max_length_value)
+# vocab_size = len(bert_tokenizer.tokenizer.get_vocab())
+
+
+
+
+#========================Yoni================================
 from transformers import BertTokenizer
+import numpy as np
+from keras.utils import to_categorical
+from keras.preprocessing.sequence import pad_sequences
 
 class BertTextTokenizer:
     def __init__(self, model_name='bert-base-uncased', max_length=64):
         self.tokenizer = BertTokenizer.from_pretrained(model_name)
         self.max_length = max_length
-
-    def dict_to_list(self, descriptions):
-        all_desc = []
-        for key in descriptions.keys():
-            [all_desc.append(d) for d in descriptions[key]]
-        return all_desc
 
     def tokenize_descriptions(self, descriptions):
         tokenized_descriptions = []
@@ -362,8 +396,7 @@ class BertTextTokenizer:
         return tokenized_descriptions
 
     def tokenize_and_get_max_length(self, descriptions):
-        desc_list = self.dict_to_list(descriptions)
-        tokenized_desc_list = self.tokenize_descriptions(desc_list)
+        tokenized_desc_list = self.tokenize_descriptions(descriptions)
         max_length_value = max(len(tokens) for tokens in tokenized_desc_list)
         return max_length_value
 
@@ -372,41 +405,84 @@ class BertTextTokenizer:
 bert_tokenizer = BertTextTokenizer()
 max_length_value = bert_tokenizer.tokenize_and_get_max_length(train_descriptions)
 print("Max length of description:", max_length_value)
+vocab_size = len(bert_tokenizer.tokenizer.get_vocab())
+
 
 #%% # Create a Data generator
-# Data generator, used by model.fit_generator()
+# # Data generator, used by model.fit_generator() - original
+# def data_generator(descriptions, features, tokenizer, max_length, vocab_size):
+#     while 1:
+#         for key, description_list in descriptions.items():
+#             # Retrieve photo features
+#             feature = features[key][0]
+#             inp_image, inp_seq, op_word = create_sequences(tokenizer, max_length, description_list, feature, vocab_size)
+#             yield [[inp_image, inp_seq], op_word]
+#
+# def create_sequences(tokenizer, max_length, desc_list, feature, vocab_size):
+#     x_1, x_2, y = list(), list(), list()
+#     # Move through each description for the image
+#     for desc in desc_list:
+#         # Encode the sequence
+#         seq = tokenizer.texts_to_sequences([desc])[0]
+#         # Divide one sequence into various X,y pairs
+#         for i in range(1, len(seq)):
+#             # Divide into input and output pair
+#             in_seq, out_seq = seq[:i], seq[i]
+#             # Pad input sequence
+#             in_seq = pad_sequences([in_seq], maxlen=max_length)[0]
+#             # Encode output sequence
+#             out_seq = to_categorical([out_seq], num_classes=vocab_size)[0]
+#             # Store
+#             x_1.append(feature)
+#             x_2.append(in_seq)
+#             y.append(out_seq)
+#     return np.array(x_1), np.array(x_2), np.array(y)
+#
+# # To check the shape of the input and output for your model
+# [a, b], c = next(data_generator(train_descriptions, train_features, bert_tokenizer, max_length_value, vocab_size))
+# print(a.shape, b.shape, c.shape)
+# # ((47, 2048), (47, 32), (47, 7577))
+
+
+#===================================yoni=================================
 def data_generator(descriptions, features, tokenizer, max_length, vocab_size):
     while 1:
         for key, description_list in descriptions.items():
             # Retrieve photo features
             feature = features[key][0]
-            inp_image, inp_seq, op_word = create_sequences(tokenizer, max_length, description_list, feature, vocab_size)
-            yield [[inp_image, inp_seq], op_word]
+            inp_seq, op_word = create_sequences(tokenizer, max_length, description_list, vocab_size)
+            inp_image = np.array([feature] * len(inp_seq))  # Repeat the image features for each description
+            yield [inp_image, inp_seq], op_word
 
-def create_sequences(tokenizer, max_length, desc_list, feature, vocab_size):
+
+def create_sequences(tokenizer, max_length, desc_list, vocab_size):
     x_1, x_2, y = list(), list(), list()
     # Move through each description for the image
     for desc in desc_list:
-        # Encode the sequence
-        seq = tokenizer.texts_to_sequences([desc])[0]
+        # Tokenize the sequence
+        seq = tokenizer.tokenizer.encode(desc, add_special_tokens=True, max_length=max_length, truncation=True)
+
         # Divide one sequence into various X,y pairs
         for i in range(1, len(seq)):
             # Divide into input and output pair
             in_seq, out_seq = seq[:i], seq[i]
+
             # Pad input sequence
-            in_seq = pad_sequences([in_seq], maxlen=max_length)[0]
+            in_seq = pad_sequences([in_seq], maxlen=max_length, padding='post')[0]
+
             # Encode output sequence
             out_seq = to_categorical([out_seq], num_classes=vocab_size)[0]
+
             # Store
-            x_1.append(feature)
-            x_2.append(in_seq)
+            x_1.append(in_seq)
+            x_2.append(out_seq)
             y.append(out_seq)
     return np.array(x_1), np.array(x_2), np.array(y)
 
 # To check the shape of the input and output for your model
-[a, b], c = next(data_generator(train_descriptions, train_features, tokenizer, max_length_value, vocab_size))
-print(a.shape, b.shape, c.shape)
-# ((47, 2048), (47, 32), (47, 7577))
+[a, b], c = next(data_generator(train_descriptions, train_features, bert_tokenizer, max_length_value, vocab_size))
+print(a[0].shape, a[1].shape, b.shape, c.shape)
+
 
 #%% Define the CNN-RNN model
 # Define the captioning model
@@ -447,7 +523,7 @@ print('Dataset: ', len(train_imgs))
 print('Descriptions: train=', len(train_descriptions))
 print('Photos: train=', len(train_features))
 print('Vocabulary Size:', vocab_size)
-print('Description Length: ', max_length)
+print('Description Length: ', max_length_value)
 
 
 model = define_model(vocab_size, max_length_value)
@@ -462,7 +538,7 @@ else:
     print(f"Directory '{models_dir}' already exists.")
 
 for _ in range(epochs):
-    generator = data_generator(train_descriptions, train_features, tokenizer, max_length_value, vocab_size)
+    generator = DataGenerator(train_descriptions, train_features, tokenizer, max_length_value, vocab_size)
     model.fit(generator, epochs=1, steps_per_epoch=steps, verbose=1)
     model.save(os.path.join(models_dir, f"model_{_}.h5"))
 
