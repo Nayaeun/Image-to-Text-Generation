@@ -219,10 +219,25 @@ def extract_features(directory):
 features = extract_features(dataset_images)
 
 # Save or use the features as needed
-dump(features, open("features_.p", "wb"))
+dump(features, open("features.p", "wb"))
 
 # to directly load the features from the pickle file.
 features = load(open("features.p", "rb"))
+
+
+#=================================
+# Print the keys (file names) in the features dictionary
+print("Keys (File Names):", list(features.keys()))
+
+# Print the shape of the features for the first image
+first_image_key = list(features.keys())[0]
+first_image_features = features[first_image_key]
+print("Shape of Features for the First Image:", first_image_features.shape)
+
+# Print the features for the first image
+print("Features for the First Image:")
+print(first_image_features)
+
 
 # #%% # Extract the Feature Vector
 # model = Xception(include_top=False, pooling='avg')
