@@ -212,13 +212,13 @@ features = load(open("features.p", "rb"))
 #%% Loading dataset for modeling training
 # Load the document file into memory (assuming load_doc is defined elsewhere)
 def load_photos(filename):
-    file = load_fp(filename)
+    file = preprocessor.load_fp(filename)
     photos = file.split("\n")[:-1]  # Using "\n" for newline
     return photos
 
 # Load clean descriptions
 def load_clean_descriptions(filename, photos):
-    file = load_fp(filename)
+    file = preprocessor.load_fp(filename)
     descriptions = {}
 
     for line in file.split("\n"):
