@@ -104,9 +104,9 @@ from dataclean import DataPreprocessor
 # # saving all descriptions in one file
 # save_descriptions(clean_descriptions, "descriptions.txt")
 
-dataset_text = "/home/ubuntu/DL/Dataset/Flicker8k_text"
-dataset_images = "/home/ubuntu/DL/Dataset/Flicker8k_Dataset"
-save_directory = "/home/ubuntu/DL/Code"
+dataset_text = "/home/ubuntu/DL/dataset/Flicker8k_text"
+dataset_images = "/home/ubuntu/Dc/dataset/Flicker8k_Dataset"
+save_directory = "/home/ubuntu/DL/code"
 preprocessor = DataPreprocessor(dataset_text, dataset_images, save_directory)
 preprocessor.preprocess_data()
 
