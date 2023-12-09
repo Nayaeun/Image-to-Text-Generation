@@ -2,10 +2,9 @@ import os
 import string
 
 class DataPreprocessor:
-    def __init__(self, dataset_text, dataset_images, save_directory):
+    def __init__(self, dataset_text, dataset_images):
         self.dataset_text = dataset_text
         self.dataset_images = dataset_images
-        self.save_directory = save_directory
         self.descriptions = None
         self.clean_descriptions = None
         self.vocabulary = None
@@ -54,7 +53,7 @@ class DataPreprocessor:
             for desc in desc_list:
                 lines.append(key + '\t' + desc)
         data = "\n".join(lines)
-        file_path = os.path.join(self.save_directory, filename)
+        file_path = os.path.join(self.dataset_text, filename)
         with open(file_path, "w") as file:
             file.write(data)
     def preprocess_data(self, token_file="Flickr8k.token.txt", save_filename="descriptions.txt"):
@@ -65,20 +64,14 @@ class DataPreprocessor:
         self.save_descriptions(self.clean_descriptions, save_filename)
 
 
-# # Example usage:
+# # Example usage - Yoni:
 # dataset_text = "/home/ubuntu/DL/dataset/Flicker8k_text"
 # dataset_images = "/home/ubuntu/DL/dataset/Flicker8k_Dataset"
-# save_directory = "/home/ubuntu/DL/code"
-# preprocessor = DataPreprocessor(dataset_text, dataset_images, save_directory)
+# preprocessor = DataPreprocessor(dataset_text, dataset_images)
 # preprocessor.preprocess_data()
 
-# Example usage:
-import os
-new_directory = '/home/ubuntu/NLP/home/ubuntu/DeepLearning'
-os.chdir(new_directory)
-
-dataset_text = ""
-dataset_images = ""
-save_directory = "Code"
-preprocessor = DataPreprocessor(dataset_text, dataset_images, save_directory)
+# Example usage - HL:
+dataset_text = "/home/ubuntu/NLP/home/ubuntu/DeepLearning/Flicker8k_text"
+dataset_images = "/home/ubuntu/NLP/home/ubuntu/DeepLearning/Flicker8k_Dataset"
+preprocessor = DataPreprocessor(dataset_text, dataset_images)
 preprocessor.preprocess_data()
