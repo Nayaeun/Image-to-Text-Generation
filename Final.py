@@ -308,38 +308,70 @@ train_features = load_features(train_imgs)
 
 
 #%% # Tokenizing the Vocabulary
-# Convert dictionary to clear list of descriptions
-def dict_to_list(descriptions):
-    all_desc = []
-    for key in descriptions.keys():
-        [all_desc.append(d) for d in descriptions[key]]
-    return all_desc
+# # Convert dictionary to clear list of descriptions
+# def dict_to_list(descriptions):
+#     all_desc = []
+#     for key in descriptions.keys():
+#         [all_desc.append(d) for d in descriptions[key]]
+#     return all_desc
+#
+# # Creating tokenizer class
+# # This will vectorize the text corpus
+# # Each integer will represent a token in the dictionary
+# from keras.preprocessing.text import Tokenizer
+#
+# def create_tokenizer(descriptions):
+#     desc_list = dict_to_list(descriptions)
+#     tokenizer = Tokenizer()
+#     tokenizer.fit_on_texts(desc_list)
+#     return tokenizer
+#
+# # Give each word an index and store that into tokenizer.p pickle file
+# tokenizer = create_tokenizer(train_descriptions)
+# dump(tokenizer, open('tokenizer.p', 'wb'))
+# vocab_size = len(tokenizer.word_index) + 1
+# print("Vocabulary size:", vocab_size)
+#
+# # Calculate the maximum length of descriptions to decide the model structure parameters
+# def max_length(descriptions):
+#     desc_list = dict_to_list(descriptions)
+#     return max(len(d.split()) for d in desc_list)
+#
+# max_length_value = max_length(train_descriptions)
+# print("Max length of description:", max_length_value)
+#
 
-# Creating tokenizer class
-# This will vectorize the text corpus
-# Each integer will represent a token in the dictionary
-from keras.preprocessing.text import Tokenizer
+from transformers import BertTokenizer
 
-def create_tokenizer(descriptions):
-    desc_list = dict_to_list(descriptions)
-    tokenizer = Tokenizer()
-    tokenizer.fit_on_texts(desc_list)
-    return tokenizer
+class BertTextTokenizer:
+    def __init__(self, model_name='bert-base-uncased', max_length=64):
+        self.tokenizer = BertTokenizer.from_pretrained(model_name)
+        self.max_length = max_length
 
-# Give each word an index and store that into tokenizer.p pickle file
-tokenizer = create_tokenizer(train_descriptions)
-dump(tokenizer, open('tokenizer.p', 'wb'))
-vocab_size = len(tokenizer.word_index) + 1
-print("Vocabulary size:", vocab_size)
+    def dict_to_list(self, descriptions):
+        all_desc = []
+        for key in descriptions.keys():
+            [all_desc.append(d) for d in descriptions[key]]
+        return all_desc
 
-# Calculate the maximum length of descriptions to decide the model structure parameters
-def max_length(descriptions):
-    desc_list = dict_to_list(descriptions)
-    return max(len(d.split()) for d in desc_list)
+    def tokenize_descriptions(self, descriptions):
+        tokenized_descriptions = []
+        for desc in descriptions:
+            tokens = self.tokenizer.encode(desc, add_special_tokens=True, max_length=self.max_length, truncation=True)
+            tokenized_descriptions.append(tokens)
+        return tokenized_descriptions
 
-max_length_value = max_length(train_descriptions)
+    def tokenize_and_get_max_length(self, descriptions):
+        desc_list = self.dict_to_list(descriptions)
+        tokenized_desc_list = self.tokenize_descriptions(desc_list)
+        max_length_value = max(len(tokens) for tokens in tokenized_desc_list)
+        return max_length_value
+
+# Example Usage
+# Assuming train_descriptions is already defined
+bert_tokenizer = BertTextTokenizer()
+max_length_value = bert_tokenizer.tokenize_and_get_max_length(train_descriptions)
 print("Max length of description:", max_length_value)
-
 
 #%% # Create a Data generator
 # Data generator, used by model.fit_generator()
