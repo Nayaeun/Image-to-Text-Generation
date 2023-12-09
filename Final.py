@@ -19,7 +19,7 @@ from keras.utils import plot_model
 import argparse
 from tqdm import tqdm #to check loop progress
 tqdm().pandas()
-from dataclean import DataPreprocessor
+#from dataclean import DataPreprocessor
 
 # #%% Perform Data Cleaning
 # # Load the document file into memory
@@ -180,34 +180,78 @@ save_directory = "/home/ubuntu/DL/code"
 preprocessor = DataPreprocessor(dataset_text, dataset_images, save_directory)
 preprocessor.preprocess_data()
 
-#%% # Extract the Feature Vector
-model = Xception(include_top=False, pooling='avg')
+#%%
+from torchvision import models, transforms
+import torch
 
+# Load the ResNet50 model pretrained on ImageNet
+model = models.resnet50(pretrained=True)
+model = torch.nn.Sequential(*(list(model.children())[:-1]))  # Remove the last fully connected layer
+model.eval()
+
+# Preprocess input image
+def preprocess_image(image_path):
+    transform = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ])
+    image = Image.open(image_path).convert('RGB')
+    image = transform(image)
+    image = image.unsqueeze(0)  # Add batch dimension
+    return image
+
+# Extract features using ResNet50
 def extract_features(directory):
-    model = Xception(include_top=False, pooling='avg')
     features = {}
-
     for pic in tqdm(os.listdir(directory)):
-        file = os.path.join (directory, pic)# directory + "/" + pic
+        file = os.path.join(directory, pic)
         try:
-            image = Image.open(file)
-            image = image.resize((299, 299))
-            image = np.expand_dims(image, axis=0)
-        # image = preprocess_input(image)
-            image = image / 127.5
-            image = image - 1.0
-            feature = model.predict(image)
-            features[pic] = feature
+            image = preprocess_image(file)
+            with torch.no_grad():
+                feature = model(image)
+            features[pic] = feature.squeeze().numpy()
         except Exception as e:
-            print (f"Error processing image {file}: {e}")
-
+            print(f"Error processing image {file}: {e}")
     return features
 
-# 2048 feature vector
+# Example usage
 features = extract_features(dataset_images)
-dump(features, open("features.p", "wb"))
+
+# Save or use the features as needed
+dump(features, open("features_.p", "wb"))
+
 # to directly load the features from the pickle file.
 features = load(open("features.p", "rb"))
+
+# #%% # Extract the Feature Vector
+# model = Xception(include_top=False, pooling='avg')
+#
+# def extract_features(directory):
+#     model = Xception(include_top=False, pooling='avg')
+#     features = {}
+#
+#     for pic in tqdm(os.listdir(directory)):
+#         file = os.path.join (directory, pic)# directory + "/" + pic
+#         try:
+#             image = Image.open(file)
+#             image = image.resize((299, 299))
+#             image = np.expand_dims(image, axis=0)
+#         # image = preprocess_input(image)
+#             image = image / 127.5
+#             image = image - 1.0
+#             feature = model.predict(image)
+#             features[pic] = feature
+#         except Exception as e:
+#             print (f"Error processing image {file}: {e}")
+#
+#     return features
+#
+# # 2048 feature vector
+# features = extract_features(dataset_images)
+# dump(features, open("features.p", "wb"))
+# # to directly load the features from the pickle file.
+# features = load(open("features.p", "rb"))
 
 #%% Loading dataset for modeling training
 # Load the document file into memory (assuming load_doc is defined elsewhere)
@@ -242,8 +286,8 @@ def load_features(photos):
     features = {k: all_features[k] for k in photos}
     return features
 
-filename = dataset_text + "/" + "Flickr_8k.trainImages.txt"
-train_imgs = load_photos(filename)
+filename_imgs = dataset_text + "/" + "Flickr_8k.trainImages.txt"
+train_imgs = load_photos(filename_imgs)
 train_descriptions = load_clean_descriptions("descriptions.txt", train_imgs)
 train_features = load_features(train_imgs)
 
@@ -392,8 +436,8 @@ tokenizer = load(open("tokenizer.p", "rb"))
 # Load pre-trained captioning model
 model = load_model('models/model_9.h5')
 
-# Xception model for image feature extraction
-xception_model = Xception(include_top=False, pooling="avg")
+# # Xception model for image feature extraction
+# xception_model = Xception(include_top=False, pooling="avg")
 
 
 # def extract_features(filename, model):
