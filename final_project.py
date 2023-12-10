@@ -23,11 +23,11 @@ CODE_DIR = "/home/ubuntu/NLP/home/ubuntu/DeepLearning/Code"
 
 #%%
 # Load vgg16 Model
-model = VGG16()
+base_model = VGG16()
 # restructure model
-model = Model(inputs = model.inputs , outputs = model.layers[-2].output)
+model = Model(inputs = base_model.inputs , outputs = base_model.layers[-2].output)
 # Summerize
-# print(model.summary())
+print(model.summary())
 
 #%%
 # extract features from image
@@ -216,6 +216,7 @@ def data_generator(data_keys, mapping, features, tokenizer, max_length, vocab_si
 # Model Creation
 # encoder model
 # image feature layers
+
 inputs1 = Input(shape=(4096,))
 fe1 = Dropout(0.4)(inputs1)
 fe2 = Dense(256, activation='relu')(fe1)
@@ -329,7 +330,7 @@ def generate_caption(image_name):
     # load the image
     # image_name = "1001773457_577c3a7d70.jpg"
     image_id = image_name.split('.')[0]
-    img_path = os.path.join(BASE_DIR, "Images", image_name)
+    img_path = os.path.join(BASE_DIR, "Flicker8k_Dataset", image_name)
     image = Image.open(img_path)
     captions = mapping[image_id]
     print('---------------------Actual---------------------')
@@ -340,6 +341,7 @@ def generate_caption(image_name):
     print('--------------------Predicted--------------------')
     print(y_pred)
     plt.imshow(image)
+    plt.show()
 
 # Image caption generator defined
 #
@@ -347,3 +349,4 @@ def generate_caption(image_name):
 
 #%%
 generate_caption("1001773457_577c3a7d70.jpg")
+# generate_caption("1022454428_b6b660a67b.jpg")
